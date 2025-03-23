@@ -7,7 +7,7 @@ This is a **FastAPI-based book management system** with **AI-powered summaries a
 ✅ **AI-powered summaries** (Llama3)  
 ✅ **Async PostgreSQL DB** (SQLAlchemy + asyncpg)  
 ✅ **Auth & security baked in**  
-✅ **Cloud-ready (Docker, AWS, GitHub Actions)**  
+✅ **Cloud-ready** (Docker, AWS, GitHub Actions)  
 
 ### **Tech Stack 🛠️**  
 - **Backend**: FastAPI, Python  
@@ -27,6 +27,7 @@ cd gen-ai-book-manager
 Install dependencies:  
 ```bash
 pip install -r requirements.txt
+```
 
 #### **Run PostgreSQL using Docker**
 
@@ -78,7 +79,6 @@ python create_db.py
 
 This script sets up the database schema dynamically.
 
-
 #### **Run the server**
 ```bash
 uvicorn app.main:app --reload
@@ -86,7 +86,7 @@ uvicorn app.main:app --reload
 
 ### **What’s Next?**  
 - ✅ **Phase 1**: Database & AI Setup (completed)  
-- ✅ **Phase 2**: API Development & Security (completed)
+- ✅ **Phase 2**: API Development & Security (completed)  
 - ⏳ **Phase 3**: AI Integration  
 - ⏳ **Phase 4**: Testing  
-- ⏳ **Phase 5**: Deployment  
+- ⏳ **Phase 5**: Deployment
