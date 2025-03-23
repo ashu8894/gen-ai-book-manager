@@ -27,3 +27,6 @@ class ReviewCreate(BaseModel):
     user_id: int
     review_text: str
     rating: float
+
+class SummaryRequest(BaseModel):
+    content: str
