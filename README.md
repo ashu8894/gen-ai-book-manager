@@ -84,9 +84,50 @@ This script sets up the database schema dynamically.
 uvicorn app.main:app --reload
 ```
 
+### **Run Llama3 Locally with Ollama**  
+To enable AI summaries and recommendations, make sure Llama3 is running via Ollama.
+
+#### **Steps to install and run Ollama with Llama3**
+
+1. **Pull the Ollama image**  
+   ```bash
+   docker pull ollama/ollama
+   ```
+
+2. **Run the Ollama container**  
+   ```bash
+   docker run -d -p 11434:11434 --name ollama ollama/ollama
+   ```
+
+3. **Shell into the container**  
+   ```bash
+   docker exec -it ollama bash
+   ```
+
+4. **Pull the Llama3 model**  
+   ```bash
+   ollama pull llama3
+   ```
+
+5. **Done!**  
+   The model will be available at:  
+   `http://localhost:11434`
+
+> The FastAPI app connects to this endpoint using the environment variable `MODEL_BASE_URL`.
+
+#### **Update your `.env` file**
+
+Add the following line to your `.env` file:
+
+```env
+MODEL_BASE_URL=http://localhost:11434
+```
+
+This ensures the app knows where to send requests for AI-generated summaries and recommendations.
+
 ### **What’s Next?**  
 - ✅ **Phase 1**: Database & AI Setup (completed)  
 - ✅ **Phase 2**: API Development & Security (completed)  
-- ⏳ **Phase 3**: AI Integration  
+- ✅ **Phase 3**: AI Integration (completed) 
 - ⏳ **Phase 4**: Testing  
 - ⏳ **Phase 5**: Deployment
