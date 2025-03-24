@@ -28,12 +28,12 @@ async def get_books(session: AsyncSession = Depends(get_session)):
     return result.scalars().all()
 
 # Retrieve specific book by ID
-@router.get("/books/{id}", response_model=BookCreate)
+@router.get("/books/{id}", response_model=Book)
 async def get_book(id: int, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(BookModel).where(BookModel.id == id))
     book = result.scalar_one_or_none()
     if not book:
-        raise HTTPException(status_code=404, message="Book not found")
+        raise HTTPException(status_code=404, detail="Book not found")
     return book
 
 # Update book information
@@ -42,7 +42,7 @@ async def update_book(id: int, book: BookUpdate, session: AsyncSession = Depends
     result = await session.execute(select(BookModel).where(BookModel.id == id))
     existing_book = result.scalar_one_or_none()
     if not existing_book:
-        raise HTTPException(status_code=404, message="Book not found")
+        raise HTTPException(status_code=404, detail="Book not found")
     for key, value in book.dict(exclude_unset=True).items():
         setattr(existing_book, key, value)
     await session.commit()
@@ -55,7 +55,7 @@ async def delete_book(id: int, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(BookModel).where(BookModel.id == id))
     book = result.scalar_one_or_none()
     if not book:
-        raise HTTPException(status_code=404, message="Book not found")
+        raise HTTPException(status_code=404, detail="Book not found")
     await session.delete(book)
     await session.commit()
     return {"message": "Book deleted successfully"}
@@ -66,7 +66,7 @@ async def add_review(id: int, review: ReviewCreate, session: AsyncSession = Depe
     result = await session.execute(select(BookModel).where(BookModel.id == id))
     book = result.scalar_one_or_none()
     if not book:
-        raise HTTPException(status_code=404, message="Book not found")
+        raise HTTPException(status_code=404, detail="Book not found")
     new_review = ReviewModel(book_id=id, **review.dict())
     session.add(new_review)
     await session.commit()
