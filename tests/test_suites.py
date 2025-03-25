@@ -2,11 +2,13 @@ import asyncio
 import pytest
 from tests.utils import basic_auth_headers
 
+BASE_URL = "/v1/api"
+
 # Test creating a new book via the API
 @pytest.mark.asyncio
 async def test_create_book(client):
     headers = basic_auth_headers()
-    response = await client.post("/books", json={
+    response = await client.post(f"{BASE_URL}/books", json={
         "title": "Test Book",
         "author": "Tester",
         "genre": "Sci-Fi",
@@ -21,7 +23,7 @@ async def test_create_book(client):
 @pytest.mark.asyncio
 async def test_get_books(client):
     headers = basic_auth_headers()
-    response = await client.get("/books", headers=headers)
+    response = await client.get(f"{BASE_URL}/books", headers=headers)
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
@@ -29,7 +31,7 @@ async def test_get_books(client):
 @pytest.mark.asyncio
 async def test_get_book_by_id(client):
     headers = basic_auth_headers()
-    create_resp = await client.post("/books", json={
+    create_resp = await client.post(f"{BASE_URL}/books", json={
         "title": "Fetch Book",
         "author": "Author X",
         "genre": "Mystery",
@@ -38,7 +40,7 @@ async def test_get_book_by_id(client):
     }, headers=headers)
     book_id = create_resp.json()["id"]
 
-    response = await client.get(f"/books/{book_id}", headers=headers)
+    response = await client.get(f"{BASE_URL}/books/{book_id}", headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == book_id
@@ -48,7 +50,7 @@ async def test_get_book_by_id(client):
 @pytest.mark.asyncio
 async def test_update_book(client):
     headers = basic_auth_headers()
-    create_resp = await client.post("/books", json={
+    create_resp = await client.post(f"{BASE_URL}/books", json={
         "title": "Old Title",
         "author": "Old Author",
         "genre": "Drama",
@@ -57,7 +59,7 @@ async def test_update_book(client):
     }, headers=headers)
     book_id = create_resp.json()["id"]
 
-    update_resp = await client.put(f"/books/{book_id}", json={
+    update_resp = await client.put(f"{BASE_URL}/books/{book_id}", json={
         "title": "New Title",
         "author": "New Author",
         "genre": "Drama",
@@ -71,7 +73,7 @@ async def test_update_book(client):
 @pytest.mark.asyncio
 async def test_delete_book(client):
     headers = basic_auth_headers()
-    create_resp = await client.post("/books", json={
+    create_resp = await client.post(f"{BASE_URL}/books", json={
         "title": "To Be Deleted",
         "author": "Someone",
         "genre": "Thriller",
@@ -80,17 +82,17 @@ async def test_delete_book(client):
     }, headers=headers)
     print(create_resp.json())
     book_id = create_resp.json()["id"]
-    del_resp = await client.delete(f"/books/{book_id}", headers=headers)
+    del_resp = await client.delete(f"{BASE_URL}/books/{book_id}", headers=headers)
     assert del_resp.status_code == 200
 
-    get_resp = await client.get(f"/books/{book_id}", headers=headers)
+    get_resp = await client.get(f"/v1/api/books/{book_id}", headers=headers)
     assert get_resp.status_code == 404
 
 # Test adding a review to a book
 @pytest.mark.asyncio
 async def test_add_review(client):
     headers = basic_auth_headers()
-    book = (await client.post("/books", json={
+    book = (await client.post(f"{BASE_URL}/books", json={
         "title": "Review Book",
         "author": "Critic",
         "genre": "Non-Fiction",
@@ -98,7 +100,7 @@ async def test_add_review(client):
         "summary": "Reviewable"
     }, headers=headers)).json()
 
-    response = await client.post(f"/books/{book['id']}/reviews", json={
+    response = await client.post(f"{BASE_URL}/books/{book['id']}/reviews", json={
         "user_id": 1,
         "review_text": "Amazing book!",
         "rating": 5
@@ -111,7 +113,7 @@ async def test_add_review(client):
 @pytest.mark.asyncio
 async def test_get_reviews(client):
     headers = basic_auth_headers()
-    book = (await client.post("/books", json={
+    book = (await client.post(f"{BASE_URL}/books", json={
         "title": "Multi Review Book",
         "author": "Multiple",
         "genre": "Biography",
@@ -120,13 +122,13 @@ async def test_get_reviews(client):
     }, headers=headers)).json()
 
     for i in range(3):
-        await client.post(f"/books/{book['id']}/reviews", json={
+        await client.post(f"{BASE_URL}/books/{book['id']}/reviews", json={
             "user_id": i + 1,
             "review_text": f"Review {i + 1}",
             "rating": 4
         }, headers=headers)
 
-    response = await client.get(f"/books/{book['id']}/reviews", headers=headers)
+    response = await client.get(f"{BASE_URL}/books/{book['id']}/reviews", headers=headers)
     assert response.status_code == 200
     assert len(response.json()) == 3
 
@@ -134,7 +136,7 @@ async def test_get_reviews(client):
 @pytest.mark.asyncio
 async def test_book_summary(client):
     headers = basic_auth_headers()
-    book = (await client.post("/books", json={
+    book = (await client.post(f"{BASE_URL}/books", json={
         "title": "Summary Book",
         "author": "Summarizer",
         "genre": "Essay",
@@ -142,13 +144,13 @@ async def test_book_summary(client):
         "summary": "Placeholder summary"
     }, headers=headers)).json()
 
-    await client.post(f"/books/{book['id']}/reviews", json={
+    await client.post(f"{BASE_URL}/books/{book['id']}/reviews", json={
         "user_id": 1,
         "review_text": "Very thoughtful",
         "rating": 4
     }, headers=headers)
 
-    response = await client.get(f"/books/{book['id']}/summary", headers=headers)
+    response = await client.get(f"{BASE_URL}/books/{book['id']}/summary", headers=headers)
     assert response.status_code == 200
     assert "average_rating" in response.json()
 
@@ -157,7 +159,7 @@ async def test_book_summary(client):
 async def test_recommendations(client):
     headers = basic_auth_headers()
     genre = "Poetry"
-    await client.post("/books", json={
+    await client.post(f"{BASE_URL}/books", json={
         "title": "Poetic One",
         "author": "Poet",
         "genre": genre,
@@ -165,7 +167,7 @@ async def test_recommendations(client):
         "summary": "Poetic summary"
     }, headers=headers)
 
-    response = await client.get(f"/recommendations?genre={genre}", headers=headers)
+    response = await client.get(f"{BASE_URL}/recommendations?genre={genre}", headers=headers)
     assert response.status_code == 200
     assert len(response.json()) >= 1
 
@@ -173,7 +175,7 @@ async def test_recommendations(client):
 @pytest.mark.asyncio
 async def test_generate_summary(client):
     headers = basic_auth_headers()
-    response = await client.post("/books/generate-summary", json={
+    response = await client.post(f"{BASE_URL}/books/generate-summary", json={
         "content": "This is a very long and interesting book content that needs summarizing."
     }, headers=headers)
     assert response.status_code == 200
