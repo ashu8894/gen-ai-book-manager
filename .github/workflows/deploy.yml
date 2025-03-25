@@ -73,6 +73,13 @@ jobs:
           docker push $ECR_REPO:$IMAGE_TAG
 
       - name: Deploy via SSM to EC2
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          USERNAME: ${{ secrets.USERNAME }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+          MODEL_BASE_URL: ${{ secrets.MODEL_BASE_URL }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          ECR_REPO: ${{ secrets.ECR_REPO }}
         run: |
           INSTANCE_ID=$(aws ec2 describe-instances \
             --filters "Name=tag:Name,Values=GenAI Book EC2" \
@@ -84,26 +91,20 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --comment "Deploy latest image from ECR" \
             --instance-ids "$INSTANCE_ID" \
-            --parameters commands='
-mkdir -p /home/ubuntu/app
-
-cat <<EOT > /home/ubuntu/app/.env
-DATABASE_URL=${{ secrets.DATABASE_URL }}
-USERNAME=${{ secrets.USERNAME }}
-PASSWORD=${{ secrets.PASSWORD }}
-MODEL_BASE_URL=${{ secrets.MODEL_BASE_URL }}
-EOT
-
-aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
-  | docker login --username AWS --password-stdin ${{ secrets.ECR_REPO }}
-
-docker pull ${{ secrets.ECR_REPO }}:${{ env.IMAGE_TAG }}
-
-docker stop book-api || true
-docker rm book-api || true
-
-docker run -d --name book-api -p 8000:8000 \
-  --env-file /home/ubuntu/app/.env \
-  ${{ secrets.ECR_REPO }}:${{ env.IMAGE_TAG }}
-            ' \
+            --parameters 'commands=["#!/bin/bash",
+              "mkdir -p /home/ubuntu/app",
+              "cat <<EOF > /home/ubuntu/app/.env",
+              "DATABASE_URL=${DATABASE_URL}",
+              "USERNAME=${USERNAME}",
+              "PASSWORD=${PASSWORD}",
+              "MODEL_BASE_URL=${MODEL_BASE_URL}",
+              "EOF",
+              "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}",
+              "docker pull ${ECR_REPO}:${IMAGE_TAG}",
+              "docker stop book-api || true",
+              "docker rm book-api || true",
+              "docker run -d --name book-api -p 8000:8000 --env-file /home/ubuntu/app/.env ${ECR_REPO}:${IMAGE_TAG}"
+            ]' \
             --output text
+
+
