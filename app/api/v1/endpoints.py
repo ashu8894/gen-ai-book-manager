@@ -12,7 +12,7 @@ router = APIRouter(
     dependencies=[Depends(get_user)]
 )
 
-@router.get("/health")
+@router.get("/health", dependencies=[])
 async def health_check():
     return {"status": "ok"}
 
