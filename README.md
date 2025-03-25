@@ -14,7 +14,7 @@ This is a **FastAPI-based book management system** with **AI-powered summaries a
 - **Database**: PostgreSQL (async)  
 - **AI Model**: Llama3  
 - **Deployment**: Docker, AWS, GitHub Actions  
-- **Testing**: Pytest + mocking  
+- **Testing**: Pytest, Pytest-Asyncio, httpx.AsyncClient
 
 ### **How to run it locally**
 
@@ -125,9 +125,27 @@ MODEL_BASE_URL=http://localhost:11434
 
 This ensures the app knows where to send requests for AI-generated summaries and recommendations.
 
+### **Running the Tests**
+
+We’ve built a fully **async-powered test suite** using `pytest`, `pytest-asyncio`, and `httpx.AsyncClient`. These tests hit real API endpoints and run against a real PostgreSQL test database.
+
+To run **all tests**:
+
+```bash
+pytest
+```
+
+Want to run just one specific test?
+
+```bash
+pytest -k test_create_book
+```
+
+The test database is automatically set up using `create_db.py`, and each test gets its own fresh database session.
+
 ### **What’s Next?**  
 - ✅ **Phase 1**: Database & AI Setup (completed)  
 - ✅ **Phase 2**: API Development & Security (completed)  
 - ✅ **Phase 3**: AI Integration (completed) 
-- ⏳ **Phase 4**: Testing  
+- ✅ **Phase 4**: Testing (Completed)
 - ⏳ **Phase 5**: Deployment
