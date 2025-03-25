@@ -12,10 +12,6 @@ router = APIRouter(
     dependencies=[Depends(get_user)]
 )
 
-@router.get("/health", dependencies=[])
-async def health_check():
-    return {"status": "ok"}
-
 # Create a new book.
 @router.post("/books", response_model=Book)
 async def create_book(book: BookCreate, session: AsyncSession = Depends(get_session)):

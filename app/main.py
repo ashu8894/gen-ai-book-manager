@@ -7,6 +7,12 @@ from app.api.v1.endpoints import router as v1_router
 
 app = FastAPI()
 
+# Mount health check here, globally public
+@app.get("/health", include_in_schema=False)
+async def health_check():
+    return {"status": "ok"}
+
+
 # Mount versioned API
 app.include_router(v1_router, prefix="/v1/api")
 
