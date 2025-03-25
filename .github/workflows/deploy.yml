@@ -102,7 +102,7 @@ jobs:
               "docker pull ${ECR_REPO}:${IMAGE_TAG}",
               "docker stop book-api || true",
               "docker rm book-api || true",
-              "docker run -d --name book-api -p 8000:8000 --env-file /home/ubuntu/app/.env ${ECR_REPO}:${IMAGE_TAG}"
+              "docker run -d --name book-api -p 8000:8000 --env-file /home/ubuntu/app/.env ${ECR_REPO}:${IMAGE_TAG} > /home/ubuntu/app/docker_run.log 2>&1"
             ]' \
             --output text
 
