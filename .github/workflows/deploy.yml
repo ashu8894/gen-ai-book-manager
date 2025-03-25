@@ -91,20 +91,20 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --comment "Deploy latest image from ECR" \
             --instance-ids "$INSTANCE_ID" \
-            --parameters 'commands=["#!/bin/bash",
+            --parameters 'commands=[
               "mkdir -p /home/ubuntu/app",
-              "cat <<EOF > /home/ubuntu/app/.env",
-              "DATABASE_URL=${DATABASE_URL}",
-              "USERNAME=${USERNAME}",
-              "PASSWORD=${PASSWORD}",
-              "MODEL_BASE_URL=${MODEL_BASE_URL}",
-              "EOF",
+              "echo DATABASE_URL='${DATABASE_URL}' > /home/ubuntu/app/.env",
+              "echo USERNAME='${USERNAME}' >> /home/ubuntu/app/.env",
+              "echo PASSWORD='${PASSWORD}' >> /home/ubuntu/app/.env",
+              "echo MODEL_BASE_URL='${MODEL_BASE_URL}' >> /home/ubuntu/app/.env",
               "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}",
+              "docker rmi -f ${ECR_REPO}:${IMAGE_TAG} || true",
               "docker pull ${ECR_REPO}:${IMAGE_TAG}",
               "docker stop book-api || true",
               "docker rm book-api || true",
               "docker run -d --name book-api -p 8000:8000 --env-file /home/ubuntu/app/.env ${ECR_REPO}:${IMAGE_TAG}"
             ]' \
             --output text
+
 
 
