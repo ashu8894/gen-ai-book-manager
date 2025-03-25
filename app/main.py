@@ -1,14 +1,16 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
-from pydantic import ValidationError
-from app.api.endpoints import router
 from fastapi.exceptions import HTTPException as FastAPIHTTPException
-from fastapi import status
+from pydantic import ValidationError
+
+from app.api.v1.endpoints import router as v1_router
 
 app = FastAPI()
 
-app.include_router(router)
+# Mount versioned API
+app.include_router(v1_router, prefix="/v1/api")
 
+# Validation Error Handler
 @app.exception_handler(ValidationError)
 async def validation_exception_handler(request: Request, exc: ValidationError):
     return JSONResponse(
@@ -18,6 +20,8 @@ async def validation_exception_handler(request: Request, exc: ValidationError):
             "message": "Validation failed"
         }
     )
+
+# Custom HTTP Exception Handler
 @app.exception_handler(FastAPIHTTPException)
 async def custom_http_exception_handler(request: Request, exc: FastAPIHTTPException):
     if exc.status_code == status.HTTP_401_UNAUTHORIZED:
