@@ -15,7 +15,7 @@ async def test_create_book(client):
         "year_published": 2023,
         "summary": "Test summary"
     }, headers=headers)
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
     assert data["title"] == "Test Book"
 
