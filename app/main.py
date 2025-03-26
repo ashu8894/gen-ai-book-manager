@@ -5,7 +5,18 @@ from pydantic import ValidationError
 
 from app.api.v1.endpoints import router as v1_router
 
-app = FastAPI()
+app = FastAPI(
+    title="Gen AI Book Management API",
+    description="An intelligent book management system powered by LLaMA3 with AI-driven summaries and recommendations.",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url=None,
+    openapi_url="/openapi.json",
+    contact={
+        "name": "Ashutosh Renu",
+        "email": "ashutoshrenu15@gmail.com",
+    }
+)
 
 # Mount health check here, globally public
 @app.get("/health", include_in_schema=False)
@@ -14,7 +25,7 @@ async def health_check():
 
 
 # Mount versioned API
-app.include_router(v1_router, prefix="/v1/api")
+app.include_router(v1_router, prefix="/v1/api", tags=["Books & Reviews"])
 
 # Validation Error Handler
 @app.exception_handler(ValidationError)
