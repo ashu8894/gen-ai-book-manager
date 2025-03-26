@@ -3,7 +3,7 @@ name: CI/CD - Build, Test, Push to ECR, Deploy via SSM
 on:
   push:
     branches:
-      - development
+      - main
 
 jobs:
   build-test-deploy:

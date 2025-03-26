@@ -1,19 +1,25 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.database import get_session
-from app.models.models import Book as BookModel, Review as ReviewModel
-from app.schemas.schemas import BookCreate, BookUpdate, ReviewCreate, Book, SummaryRequest
 from sqlalchemy.future import select
 from typing import List
-from app.core.auth import get_user  
+
+from app.core.database import get_session
+from app.core.auth import get_user
+from app.models.models import Book as BookModel, Review as ReviewModel
+from app.schemas.schemas import BookCreate, BookUpdate, ReviewCreate, Book, SummaryRequest
 from app.services.ai import generate_summary
 
 router = APIRouter(
     dependencies=[Depends(get_user)]
 )
 
-# Create a new book.
-@router.post("/books", response_model=Book)
+@router.post(
+    "/books",
+    response_model=Book,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new book",
+    description="Add a new book with title, author, genre, year, and optional summary."
+)
 async def create_book(book: BookCreate, session: AsyncSession = Depends(get_session)):
     new_book = BookModel(**book.dict())
     session.add(new_book)
@@ -21,14 +27,24 @@ async def create_book(book: BookCreate, session: AsyncSession = Depends(get_sess
     await session.refresh(new_book)
     return new_book
 
-# Retrieve all books
-@router.get("/books", response_model=List[BookCreate])
+@router.get(
+    "/books",
+    response_model=List[Book],
+    status_code=status.HTTP_200_OK,
+    summary="Retrieve all books",
+    description="Fetch all books stored in the database."
+)
 async def get_books(session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(BookModel))
     return result.scalars().all()
 
-# Retrieve specific book by ID
-@router.get("/books/{id}", response_model=Book)
+@router.get(
+    "/books/{id}",
+    response_model=Book,
+    status_code=status.HTTP_200_OK,
+    summary="Retrieve a book by ID",
+    description="Fetch a specific book by its ID."
+)
 async def get_book(id: int, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(BookModel).where(BookModel.id == id))
     book = result.scalar_one_or_none()
@@ -36,8 +52,13 @@ async def get_book(id: int, session: AsyncSession = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Book not found")
     return book
 
-# Update book information
-@router.put("/books/{id}", response_model=BookCreate)
+@router.put(
+    "/books/{id}",
+    response_model=Book,
+    status_code=status.HTTP_200_OK,
+    summary="Update a book",
+    description="Update the information of a specific book by its ID."
+)
 async def update_book(id: int, book: BookUpdate, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(BookModel).where(BookModel.id == id))
     existing_book = result.scalar_one_or_none()
@@ -49,8 +70,12 @@ async def update_book(id: int, book: BookUpdate, session: AsyncSession = Depends
     await session.refresh(existing_book)
     return existing_book
 
-# Delete a book
-@router.delete("/books/{id}")
+@router.delete(
+    "/books/{id}",
+    status_code=status.HTTP_200_OK,
+    summary="Delete a book",
+    description="Delete a book from the database by its ID."
+)
 async def delete_book(id: int, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(BookModel).where(BookModel.id == id))
     book = result.scalar_one_or_none()
@@ -60,8 +85,13 @@ async def delete_book(id: int, session: AsyncSession = Depends(get_session)):
     await session.commit()
     return {"message": "Book deleted successfully"}
 
-# Add review for a book
-@router.post("/books/{id}/reviews", response_model=ReviewCreate)
+@router.post(
+    "/books/{id}/reviews",
+    response_model=ReviewCreate,
+    status_code=status.HTTP_200_OK,
+    summary="Add a review",
+    description="Add a review for a specific book using book ID."
+)
 async def add_review(id: int, review: ReviewCreate, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(BookModel).where(BookModel.id == id))
     book = result.scalar_one_or_none()
@@ -73,14 +103,23 @@ async def add_review(id: int, review: ReviewCreate, session: AsyncSession = Depe
     await session.refresh(new_review)
     return new_review
 
-# Retrieve all reviews for a book
-@router.get("/books/{id}/reviews", response_model=List[ReviewCreate])
+@router.get(
+    "/books/{id}/reviews",
+    response_model=List[ReviewCreate],
+    status_code=status.HTTP_200_OK,
+    summary="Get book reviews",
+    description="Retrieve all reviews for a specific book."
+)
 async def get_reviews(id: int, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(ReviewModel).where(ReviewModel.book_id == id))
     return result.scalars().all()
 
-# Fetch a book's summary along with its average rating and a concise summary of its reviews.
-@router.get("/books/{id}/summary")
+@router.get(
+    "/books/{id}/summary",
+    status_code=status.HTTP_200_OK,
+    summary="Get book summary and average rating",
+    description="Fetch the book summary and a concise review summary with average rating using LLaMA3."
+)
 async def get_book_summary(id: int, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(BookModel).where(BookModel.id == id))
     book = result.scalar_one_or_none()
@@ -113,9 +152,13 @@ async def get_book_summary(id: int, session: AsyncSession = Depends(get_session)
         "review_summary": review_summary
     }
 
-# Fetch book recommendations based on a given genre.
-@router.get("/recommendations")
-async def get_recommendations(genre: str, session: AsyncSession = Depends(get_session)):
+@router.get(
+    "/recommendations",
+    status_code=status.HTTP_200_OK,
+    summary="Get book recommendations",
+    description="Retrieve book recommendations based on a provided genre."
+)
+async def get_recommendations(genre: str = Query(..., description="Genre to filter recommendations by"), session: AsyncSession = Depends(get_session)):
     result = await session.execute(
         select(BookModel).where(BookModel.genre.ilike(f"%{genre}%"))
     )
@@ -124,20 +167,23 @@ async def get_recommendations(genre: str, session: AsyncSession = Depends(get_se
     if not books:
         raise HTTPException(status_code=404, detail="No books found for this genre")
 
-    recommendations = []
-    for book in books:
-        book_data = {
+    recommendations = [
+        {
             "id": book.id,
             "title": book.title,
             "author": book.author,
             "genre": book.genre,
             "year_published": book.year_published
-        }
-        recommendations.append(book_data)
+        } for book in books
+    ]
     return recommendations
 
-# Generate a summary for the given book content using LLaMA3.
-@router.post("/books/generate-summary")
+@router.post(
+    "/books/generate-summary",
+    status_code=status.HTTP_200_OK,
+    summary="Generate AI summary",
+    description="Generate a book summary using the LLaMA3 model from raw content."
+)
 async def generate_summary_endpoint(payload: SummaryRequest):
     prompt = f"Summarize this book:\n{payload.content}"
     summary = await generate_summary(prompt)

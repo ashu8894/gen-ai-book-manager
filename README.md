@@ -143,9 +143,16 @@ pytest -k test_create_book
 
 The test database is automatically set up using `create_db.py`, and each test gets its own fresh database session.
 
+### Deployment
+
+The infrastructure setup for deploying this project is managed in a separate repository using Terraform and AWS services.
+
+**Check out the deployment setup here**: [gen-ai-book-manager-cloud-infrastructure](https://github.com/ashu8894/gen-ai-book-manager-cloud-infrastructure)
+
+
 ### **What’s Next?**  
 - ✅ **Phase 1**: Database & AI Setup (completed)  
 - ✅ **Phase 2**: API Development & Security (completed)  
 - ✅ **Phase 3**: AI Integration (completed) 
 - ✅ **Phase 4**: Testing (Completed)
-- ⏳ **Phase 5**: Deployment
+- ✅ **Phase 5**: Deployment (Completed)
